@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page">
+    <header class="header">
+        <div>
+            <div class="brand">KDU SHUTTLE</div>
+            <div class="title">경동대학교 셔틀버스 예약</div>
+        </div>
+
+        <div class="login-area">
+            <span>{{ student_id }}님</span>
+            <a href="{{ url_for('my_reservations') }}" class="login-button">내 예약</a>
+            <a href="{{ url_for('logout') }}" class="login-button">로그아웃</a>
+            <button id="guide-open" class="login-button guide-button" type="button">안내</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="intro intro-with-timetable">
+            <div>
+                <h1>셔틀버스 예약</h1>
+                <p>탑승할 정류장과 방향을 선택해주세요.</p>
+            </div>
+            <a href="{{ url_for('timetable') }}" class="primary-button timetable-button">시간표 확인</a>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-area">
+                    {% for message in messages %}
+                        <div class="flash">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="station-container">
+            {% for station in ["양주역", "도봉산역", "의정부 중앙역"] %}
+            <section class="station-row">
+                <div class="station-name">{{ station }}</div>
+
+                <div class="station-buttons">
+                    <a
+                        href="{{ url_for('reserve', direction='등교', station=station) }}"
+                        class="direction-button"
+                    >등교</a>
+
+                    <a
+                        href="{{ url_for('reserve', direction='하교', station=station) }}"
+                        class="direction-button"
+                    >하교</a>
+                </div>
+            </section>
+            {% endfor %}
+        </div>
+
+        <!-- 셔틀버스 이용 안내 팝업 -->
+        <div id="guide-modal" class="guide-modal" aria-hidden="true">
+            <div class="guide-modal-backdrop"></div>
+            <div class="guide-modal-content" role="dialog" aria-modal="true" aria-labelledby="guide-title">
+                <div class="guide-modal-header">
+                    <h2 id="guide-title">셔틀버스 이용 안내</h2>
+                    <button id="guide-close" class="guide-modal-close" type="button" aria-label="닫기">×</button>
+                </div>
+
+                <div class="guide-section">
+                    <h3>예약</h3>
+                    <ul>
+                        <li>예약은 출발 전날 18:30부터 가능합니다.</li>
+                        <li>좌석은 시스템에서 자동으로 배정됩니다.</li>
+                        <li>동일 날짜에 같은 방향으로 중복 예약할 수 없습니다.</li>
+                    </ul>
+                </div>
+
+                <div class="guide-section">
+                    <h3>취소</h3>
+                    <ul>
+                        <li>출발 10분 전까지 예약 취소가 가능합니다.</li>
+                        <li>출발 10분 이내에는 취소할 수 없습니다.</li>
+                    </ul>
+                </div>
+
+                <div class="guide-section">
+                    <h3>노쇼</h3>
+                    <ul>
+                        <li>예약 후 탑승하지 않으면 노쇼로 처리됩니다.</li>
+                        <li>14일 내 1회: 경고</li>
+                        <li>14일 내 2회: 7일간 사이트 이용 제한</li>
+                        <li>14일 내 3회: 14일간 사이트 이용 제한</li>
+                    </ul>
+                </div>
+
+                <button id="guide-confirm" class="guide-confirm-button" type="button">확인</button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    const guideModal = document.getElementById("guide-modal");
+    const guideOpen = document.getElementById("guide-open");
+    const guideClose = document.getElementById("guide-close");
+    const guideConfirm = document.getElementById("guide-confirm");
+    const guideBackdrop = guideModal.querySelector(".guide-modal-backdrop");
+
+    function openGuide() {
+        guideModal.classList.add("show");
+        guideModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeGuide() {
+        guideModal.classList.remove("show");
+        guideModal.setAttribute("aria-hidden", "true");
+    }
+
+    guideOpen.addEventListener("click", openGuide);
+    guideClose.addEventListener("click", closeGuide);
+    guideConfirm.addEventListener("click", closeGuide);
+    guideBackdrop.addEventListener("click", closeGuide);
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+            closeGuide();
+        }
+    });
+</script>
+{% endblock %}

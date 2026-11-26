@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page login-page">
+    <main class="login-card">
+        <div class="brand">KDU SHUTTLE</div>
+        <h1>셔틀버스 예약</h1>
+        <p>학번을 입력하면 예약 서비스를 이용할 수 있습니다.</p>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-area">
+                    {% for message in messages %}
+                        <div class="flash">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="post" class="login-form">
+            <label for="student_id">학번</label>
+            <input
+                id="student_id"
+                name="student_id"
+                type="text"
+                inputmode="numeric"
+                maxlength="20"
+                placeholder="학번을 입력하세요(예시: 2221054)"
+                required
+                autofocus
+            >
+
+            <button type="submit">로그인</button>
+        </form>
+    </main>
+</div>
+{% endblock %}

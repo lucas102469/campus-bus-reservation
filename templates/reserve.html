@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page">
+    <header class="header">
+        <div>
+            <div class="brand">KDU SHUTTLE</div>
+            <div class="title">경동대학교 셔틀버스 예약</div>
+        </div>
+
+        <div class="login-area">
+            <span>{{ student_id }}님</span>
+            <a href="{{ url_for('my_reservations') }}" class="login-button">내 예약</a>
+            <a href="{{ url_for('logout') }}" class="login-button">로그아웃</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="reservation-head">
+            <div class="reservation-head-top">
+                <a href="{{ url_for('index') }}" class="back-link">
+                    ← 정류장 선택으로 돌아가기
+                </a>
+
+                {% if direction == "등교" %}
+                    <button id="boarding-location-open" class="boarding-location-button" type="button">
+                        📍 탑승 위치 보기
+                    </button>
+                {% endif %}
+            </div>
+
+            <h1>
+                {% if direction == "등교" %}
+                    {{ station }} → 경동대학교
+                {% else %}
+                    경동대학교 → {{ station }}
+                {% endif %}
+            </h1>
+
+            <p>
+                {{ direction }} 예약 · 운행 시간과 잔여 좌석을 확인해주세요.
+            </p>
+        </div>
+
+        <form class="date-form" method="get">
+            <label for="date">탑승 날짜</label>
+
+            <div class="date-row">
+                <input
+                    id="date"
+                    name="date"
+                    type="date"
+                    value="{{ selected_date }}"
+                    min="{{ today }}"
+                    onchange="this.form.submit()"
+                >
+            </div>
+        </form>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                {% if category != "duplicate" %}
+                    <div class="flash-area" style="margin-top: 20px;">
+                        <div class="flash">{{ message }}</div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            {% for category, message in messages %}
+                {% if category == "duplicate" %}
+                    <div id="duplicateModal" class="duplicate-modal">
+                        <div class="duplicate-modal-box">
+                            <div class="duplicate-modal-title">예약 안내</div>
+                            <div class="duplicate-modal-message">{{ message }}</div>
+                            <button type="button" class="duplicate-modal-button" onclick="closeDuplicateModal()">확인</button>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endwith %}
+
+        <style>
+            .duplicate-modal {
+                position: fixed;
+                inset: 0;
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(0, 0, 0, 0.45);
+                padding: 20px;
+            }
+
+            .duplicate-modal-box {
+                width: min(360px, 100%);
+                background: #fff;
+                border-radius: 14px;
+                padding: 24px;
+                text-align: center;
+                box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+            }
+
+            .duplicate-modal-title {
+                font-size: 20px;
+                font-weight: 700;
+                margin-bottom: 14px;
+            }
+
+            .duplicate-modal-message {
+                font-size: 15px;
+                color: #555;
+                margin-bottom: 20px;
+            }
+
+            .duplicate-modal-button {
+                width: 100%;
+                border: 0;
+                border-radius: 9px;
+                padding: 11px 16px;
+                background: #2563eb;
+                color: #fff;
+                font-size: 15px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+
+            .duplicate-modal-button:hover {
+                background: #1d4ed8;
+            }
+        </style>
+
+        <script>
+            function closeDuplicateModal() {
+                const modal = document.getElementById("duplicateModal");
+                if (modal) {
+                    modal.remove();
+                }
+            }
+        </script>
+
+        <div class="schedule-title">
+            <h2>운행 시간</h2>
+            <span>
+                {{ selected_date_display }} ({{ day_name }})
+            </span>
+        </div>
+
+        {% if schedules %}
+            <div class="schedule-list">
+                {% for item in schedules %}
+                <div class="schedule-card">
+                    <div class="schedule-time">{{ item.time }}</div>
+
+                    <div>
+                        <div class="schedule-route">
+                            {% if direction == "등교" %}
+                                {{ station }} → 경동대학교
+                            {% else %}
+                                경동대학교 → {{ station }}
+                            {% endif %}
+                        </div>
+
+                        <div class="schedule-info">
+                            <span>운행 버스 {{ item.buses|length }}대</span>
+                            <span>총 {{ item.capacity }}석</span>
+                            <span class="{% if item.remaining == 0 %}sold-out{% endif %}">
+                                잔여 {{ item.remaining }}석
+                            </span>
+                        </div>
+                    </div>
+
+                    <form
+                        method="post"
+                        action="{{ url_for('reserve_submit', direction=direction, station=station) }}"
+                    >
+                        <input
+                            type="hidden"
+                            name="reservation_date"
+                            value="{{ selected_date }}"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="departure_time"
+                            value="{{ item.time }}"
+                        >
+
+                        {% if item.is_past %}
+                            <button
+                                class="reserve-button disabled"
+                                type="button"
+                                disabled
+                            >
+                                예약불가
+                            </button>
+                        {% elif item.remaining > 0 %}
+                            <button
+                                class="reserve-button"
+                                type="submit"
+                                data-reservation-date="{{ selected_date }}"
+                                data-departure-time="{{ item.time }}"
+                            >
+                                예약
+                            </button>
+                        {% else %}
+                            <button
+                                class="reserve-button disabled"
+                                type="button"
+                                disabled
+                            >
+                                마감
+                            </button>
+                        {% endif %}
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-schedule">
+                <h2>운행 배차가 없습니다.</h2>
+                <p>
+                    선택한 날짜에는 {{ direction }} 셔틀 운행 배차가 없습니다.
+                </p>
+            </div>
+        {% endif %}
+
+        {% if direction == "등교" %}
+        <!-- 선택한 역의 등교 버스 탑승 위치를 보여주는 팝업 -->
+        <div id="boarding-location-modal" class="boarding-modal" aria-hidden="true">
+            <div class="boarding-modal-backdrop"></div>
+            <div class="boarding-modal-content" role="dialog" aria-modal="true" aria-labelledby="boarding-location-title">
+                <div class="boarding-modal-header">
+                    <div>
+                        <h2 id="boarding-location-title">📍 탑승 위치 안내</h2>
+                        <p>{{ station }}에서 경동대학교로 가는 등교 버스 탑승 위치입니다.</p>
+                    </div>
+                    <button id="boarding-location-close" class="boarding-modal-close" type="button" aria-label="닫기">×</button>
+                </div>
+
+                <div class="boarding-location-card">
+                    <h3>{{ station }} 탑승 위치</h3>
+                    {% if station == "양주역" %}
+                        <img src="{{ url_for('static', filename='boarding/yangju.png') }}" alt="양주역 등교 셔틀버스 탑승 위치">
+                    {% elif station == "도봉산역" %}
+                        <img src="{{ url_for('static', filename='boarding/dobongsan.png') }}" alt="도봉산역 등교 셔틀버스 탑승 위치">
+                    {% elif station == "의정부 중앙역" %}
+                        <img src="{{ url_for('static', filename='boarding/uijeongbu.png') }}" alt="의정부 중앙역 등교 셔틀버스 탑승 위치">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div id="reservation-time-modal" class="reservation-modal" aria-hidden="true">
+            <div class="reservation-modal-backdrop"></div>
+            <div class="reservation-modal-content" role="dialog" aria-modal="true" aria-labelledby="reservation-time-title">
+                <h2 id="reservation-time-title">예약시간이 아닙니다.</h2>
+                <p>예약은 탑승 전날 18:30부터 가능합니다.</p>
+                <button id="reservation-time-confirm" type="button">확인</button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const modal = document.getElementById("reservation-time-modal");
+        const confirmButton = document.getElementById("reservation-time-confirm");
+        const backdrop = modal.querySelector(".reservation-modal-backdrop");
+
+        // 등교 예약 화면에서 현재 선택한 역의 탑승 위치 팝업을 열고 닫는다.
+        const boardingModal = document.getElementById("boarding-location-modal");
+        const boardingOpenButton = document.getElementById("boarding-location-open");
+        const boardingCloseButton = document.getElementById("boarding-location-close");
+        const boardingBackdrop = boardingModal ? boardingModal.querySelector(".boarding-modal-backdrop") : null;
+
+        function showBoardingModal() {
+            if (!boardingModal) return;
+            boardingModal.classList.add("show");
+            boardingModal.setAttribute("aria-hidden", "false");
+        }
+
+        function hideBoardingModal() {
+            if (!boardingModal) return;
+            boardingModal.classList.remove("show");
+            boardingModal.setAttribute("aria-hidden", "true");
+        }
+
+        if (boardingOpenButton) boardingOpenButton.addEventListener("click", showBoardingModal);
+        if (boardingCloseButton) boardingCloseButton.addEventListener("click", hideBoardingModal);
+        if (boardingBackdrop) boardingBackdrop.addEventListener("click", hideBoardingModal);
+
+        function makeDate(dateText, timeText) {
+            const [year, month, day] = dateText.split("-").map(Number);
+            const [hour, minute] = timeText.split(":").map(Number);
+            return new Date(year, month - 1, day, hour, minute, 0);
+        }
+
+        function showModal() {
+            modal.classList.add("show");
+            modal.setAttribute("aria-hidden", "false");
+            confirmButton.focus();
+        }
+
+        function hideModal() {
+            modal.classList.remove("show");
+            modal.setAttribute("aria-hidden", "true");
+        }
+
+        document.querySelectorAll(".reserve-button[type='submit']").forEach(function (button) {
+            button.addEventListener("click", function (event) {
+                const reservationDate = button.dataset.reservationDate;
+                const departureTime = button.dataset.departureTime;
+                const departureDateTime = makeDate(reservationDate, departureTime);
+
+                const [year, month, day] = reservationDate.split("-").map(Number);
+                const bookingStart = new Date(year, month - 1, day - 1, 18, 30, 0);
+                const now = new Date();
+
+                if (now < bookingStart || now > departureDateTime) {
+                    event.preventDefault();
+                    showModal();
+                }
+            });
+        });
+
+        confirmButton.addEventListener("click", hideModal);
+        backdrop.addEventListener("click", hideModal);
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && modal.classList.contains("show")) {
+                hideModal();
+            }
+            if (event.key === "Escape" && boardingModal && boardingModal.classList.contains("show")) {
+                hideBoardingModal();
+            }
+        });
+    });
+</script>
+{% endblock %}

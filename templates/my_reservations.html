@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page">
+    <header class="header">
+        <div>
+            <div class="brand">KDU SHUTTLE</div>
+            <div class="title">경동대학교 셔틀버스 예약</div>
+        </div>
+
+        <div class="login-area">
+            <span>{{ student_id }}님</span>
+            <a href="{{ url_for('logout') }}" class="login-button">로그아웃</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="reservation-head">
+            <a href="{{ url_for('index') }}" class="back-link">
+                ← 정류장 선택으로 돌아가기
+            </a>
+
+            <h1>내 예약</h1>
+            <p>예약한 셔틀버스 정보를 확인하고 취소할 수 있습니다.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                {% if category != "cancel_success" %}
+                    <div class="flash-area">
+                        <div class="flash">{{ message }}</div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            {% for category, message in messages %}
+                {% if category == "cancel_success" %}
+                    <div id="cancelSuccessModal" class="cancel-success-modal">
+                        <div class="cancel-success-modal-box">
+                            <div class="cancel-success-modal-title">예약 안내</div>
+                            <div class="cancel-success-modal-message">{{ message }}</div>
+                            <button type="button" class="cancel-success-modal-button" onclick="closeCancelSuccessModal()">확인</button>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endwith %}
+
+        <style>
+            .cancel-success-modal {
+                position: fixed;
+                inset: 0;
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(0, 0, 0, 0.45);
+                padding: 20px;
+            }
+
+            .cancel-success-modal-box {
+                width: min(360px, 100%);
+                background: #fff;
+                border-radius: 14px;
+                padding: 24px;
+                text-align: center;
+                box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+            }
+
+            .cancel-success-modal-title {
+                font-size: 20px;
+                font-weight: 700;
+                margin-bottom: 14px;
+            }
+
+            .cancel-success-modal-message {
+                font-size: 15px;
+                color: #555;
+                margin-bottom: 20px;
+            }
+
+            .cancel-success-modal-button {
+                width: 100%;
+                border: 0;
+                border-radius: 9px;
+                padding: 11px 16px;
+                background: #2563eb;
+                color: #fff;
+                font-size: 15px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+
+            .cancel-success-modal-button:hover {
+                background: #1d4ed8;
+            }
+        </style>
+
+        <script>
+            function closeCancelSuccessModal() {
+                const modal = document.getElementById("cancelSuccessModal");
+                if (modal) {
+                    modal.remove();
+                }
+            }
+        </script>
+
+        {% if reservations %}
+            <div class="my-reservation-list">
+                {% for item in reservations %}
+                <div class="my-reservation-card">
+                    <div>
+                        <div class="my-reservation-title">
+                            {% if item.direction == "등교" %}
+                                {{ item.station }} → 경동대학교
+                            {% else %}
+                                경동대학교 → {{ item.station }}
+                            {% endif %}
+                        </div>
+
+                        <div class="my-reservation-info">
+                            <span>{{ item.reservation_date_display }} ({{ item.day_name }})</span>
+                            <span>{{ item.departure_time }}</span>
+                            <span>{{ item.bus_number }}호차</span>
+                            <span>{{ item.seat_number }}번 좌석</span>
+                        </div>
+                    </div>
+
+                    {% if item.cancel_allowed %}
+                        <form
+                            method="post"
+                            action="{{ url_for('cancel_reservation', reservation_id=item.id) }}"
+                        >
+                            <button class="cancel-button" type="submit">
+                                예약 취소
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="cancel-disabled">
+                            취소 불가
+                        </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-schedule">
+                <h2>예약 내역이 없습니다.</h2>
+                <p>현재 예약된 셔틀버스가 없습니다.</p>
+            </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

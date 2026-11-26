@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page">
+    <main class="complete-card">
+        <div class="brand">KDU SHUTTLE</div>
+        <h1>예약이 완료되었습니다.</h1>
+
+        <div class="complete-info">
+            <p><strong>정류장</strong> {{ station }}</p>
+            <p><strong>방향</strong> {{ direction }}</p>
+            <p><strong>탑승일</strong> {{ reservation_date }} ({{ day_name }})</p>
+            <p><strong>출발시간</strong> {{ departure_time }}</p>
+            <p><strong>버스</strong> {{ bus_number }}호차</p>
+            <p><strong>좌석</strong> {{ seat_number }}번</p>
+        </div>
+
+        <div class="complete-actions">
+            <a href="{{ url_for('my_reservations') }}" class="primary-button">
+                내 예약 확인
+            </a>
+
+            <a href="{{ url_for('index') }}" class="secondary-button">
+                메인으로 돌아가기
+            </a>
+        </div>
+    </main>
+</div>
+{% endblock %}

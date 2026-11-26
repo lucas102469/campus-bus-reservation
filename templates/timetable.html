@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page">
+    <header class="header">
+        <div>
+            <div class="brand">KDU SHUTTLE</div>
+            <div class="title">경동대학교 셔틀버스 예약</div>
+        </div>
+
+        <div class="login-area">
+            <span>{{ student_id }}님</span>
+            <a href="{{ url_for('my_reservations') }}" class="login-button">내 예약</a>
+            <a href="{{ url_for('logout') }}" class="login-button">로그아웃</a>
+            <a href="{{ url_for('index') }}" class="login-button timetable-back-button">예약</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="intro timetable-intro">
+            <div>
+                <h1>셔틀버스 시간표</h1>
+                <p>정류장별 등교·하교 운행 시간표를 확인할 수 있습니다.</p>
+            </div>
+        </div>
+
+        <div class="timetable-list">
+            <section class="timetable-section">
+                <h2>양주역 ↔ 경동대학교 양주캠퍼스</h2>
+                <div class="timetable-image-wrap">
+                    <img src="{{ url_for('static', filename='timetable/yangju.png') }}" alt="양주역 셔틀버스 운행 시간표">
+                </div>
+            </section>
+
+            <section class="timetable-section">
+                <h2>도봉산역 ↔ 경동대학교 양주캠퍼스</h2>
+                <div class="timetable-image-wrap">
+                    <img src="{{ url_for('static', filename='timetable/dobongsan.png') }}" alt="도봉산역 셔틀버스 운행 시간표">
+                </div>
+            </section>
+
+            <section class="timetable-section">
+                <h2>의정부 중앙역 ↔ 경동대학교 양주캠퍼스</h2>
+                <div class="timetable-image-wrap">
+                    <img src="{{ url_for('static', filename='timetable/uijeongbu.png') }}" alt="의정부 중앙역 셔틀버스 운행 시간표">
+                </div>
+            </section>
+        </div>
+
+        <div class="timetable-actions">
+            <a href="{{ url_for('index') }}" class="primary-button timetable-return-button">예약 화면으로 돌아가기</a>
+        </div>
+    </main>
+</div>
+{% endblock %}
